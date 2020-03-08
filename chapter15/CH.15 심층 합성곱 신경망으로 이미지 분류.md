@@ -103,15 +103,105 @@ CNN의 기본 연산인 합성곱은 **이산 합성곱**(discrete convolution) 
 
     출력 크기가 입력 벡터 **x**와 같아야 할 때 사용한다. 패딩 파라미터 p는 입력과 출력의 크기를 맞출수 있도록 결정된다.
 
+    실전에서 가장 많이 쓰이는 패딩이며 세임 패딩으로 너비와 높이를 유지하고 풀링에서 크기를 감소시킨다.
+
   - 밸리드 패딩 : 
 
     p = 0인 경우이다. 즉 패딩이 적용되지 않은 경우이다.
 
-- 1차원 합성곱
+- 합성곱 출력 크기 계산
+
+  합성곱 출력의 크기는 다음과 같은 수식에 의해 계산된다.
+  $$
+  O = \left[{n+2p-m} \over s \right]+1
+  $$
+  n = 입력 벡터 크기
+
+  p = 패딩
+
+  m = 필터(커널) 크기
+
+  s = 스트라이드(밀어내는 칸 수)
+
+  (단 []속의 연산은 소숫점을 버림하는 연산이다.)
+
+- 1차원 이산 합성곱
 
   만약 **x** = (3,2,1,7,1,2,5,4)이고, **w** = (1/2, 3/4, 1, 1/4)라면,
 
   ![](https://raw.githubusercontent.com/Jonsuff/MLstudy/master/images/ch15_conv.png)
 
+  
 
+  1차원 합성곱 예제 코딩
+
+  ```python
+  import numpy as np
+  def conv1d(x, w, p=0, s=1):
+      w_rot = np.array(w[::-1])
+      x_padded = np.array(x)
+      if p > 0:
+          zero_pad = np.zeros(shape=p)
+          x_padded = np.concatenate([zero_pad, x_padded, 
+                                     zero_pad])
+      res = []
+      for i in range(0, int(len(x)/s),s):
+          res.append(np.sum(x_padded[i:i+w_rot.shape[0]]*
+                            w_rot))
+      return np.array(res)    
+  ```
+
+- 2D 이산 합성곱 : 
+
+  앞선 1차원 이산 합성곱을 2차원으로 확장하여 이미지 데이터를 합성곱으로 계산한다.
+
+  2차원 합성곱 예제 코딩
+
+  ```python
+  import numpy as np
+  import scipy.signal
+  
+  
+  def conv2d(X, W, p=(0,0), s=(1,1)):
+      W_rot = np.array(W)[::-1,::-1]
+      X_orig = np.array(X)
+      ## 이미지의 상하좌우 끝에 제로 패딩
+      n1 = X_orig.shape[0] + 2*p[0]
+      n2 = X_orig.shape[1] + 2*p[1]
+      X_padded = np.zeros(shape=(n1,n2))
+      X_padded[p[0]:p[0] + X_orig.shape[0], 
+               p[1]:p[1] + X_orig.shape[1]] = X_orig
+  
+      res = []
+      for i in range(0, int((X_padded.shape[0] - 
+                             W_rot.shape[0])/s[0])+1, s[0]):
+          res.append([])
+          for j in range(0, int((X_padded.shape[1] - 
+                                 W_rot.shape[1])/s[1])+1, s[1]):
+              X_sub = X_padded[i:i+W_rot.shape[0], 
+                               j:j+W_rot.shape[1]]
+              res[-1].append(np.sum(X_sub * W_rot))
+      return(np.array(res))
+  ```
+
+  위의 예제는 개념 이해용으로 작성되어서 메모리 효율이 매우 비효율적이다.
+
+  연산을 효율적으로 수행하는 **위노그라드 최솟값 필터링**(Winograd's Minimal Filtering)같은 알고리즘이 개발되었다.
+
+  > Fast Algorithms for Convolutional Neural Networks, Andrew Lavin and Scott Gray, 2015
+  >
+  > https://arxiv.org/abs/1509.09308
+
+
+
+### 15.1.3 서브샘플링
+
+서브샘플링은 전형적인 두 종류의 풀링 연산으로 CNN에 적용된다.
+
+- 최대 풀링(Max-pooling) : 영역에서 최댓값을 뽑아냄
+- 평균 풀링(Mean-pooling / average-pooling) : 영역의 평균을 뽑아냄
+
+![](https://raw.githubusercontent.com/Jonsuff/MLstudy/master/images/ch15_pooling.png)
+
+풀링은 특성의 크기를 감소시켜 계산 효율성을 높이고, 과대적합을 감소시킨다.
 
