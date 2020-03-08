@@ -81,5 +81,37 @@ CNN의 기본 연산인 합성곱은 **이산 합성곱**(discrete convolution) 
 
   
 
-- 
+- **제로 패딩**(zero padding) : 
+
+  유한한 개수의 0를 추가하여 **x**의 크기를 결정한다.
+
+  만약 원본 입력 **x**와 필터 **w**가 각각 n, m개의 원소를 가지고 m $$\le$$ n 이고, 패딩된 벡터 $$\mathbf{x}^p$$의 크기는 n+2p 이다. 따라서 이산 합성곱 공식은 다음과 같다.
+  $$
+  \mathbf{y} = \mathbf{x} * \mathbf{w} \rarr \mathbf{y[\mathrm{i}]} = \sum^{k = m-1}_{k = 0} \mathbf{x^{\mathrm{p}}[\mathrm{i+m-k}]} \mathbf{w[\mathrm{k}]}
+  $$
+  
+
+- 패딩의 종류
+
+  실전에서 크게 사용되는 패딩은 다음과 같다.
+
+  - 풀 패딩 : 
+
+    패딩 파라미터 p를 p = m-1로 설정한다. 이는 출력 크기를 증가시키기 때문에 CNN에서는 거의 사용하지 않는다.
+
+  - 세임 패딩 : 
+
+    출력 크기가 입력 벡터 **x**와 같아야 할 때 사용한다. 패딩 파라미터 p는 입력과 출력의 크기를 맞출수 있도록 결정된다.
+
+  - 밸리드 패딩 : 
+
+    p = 0인 경우이다. 즉 패딩이 적용되지 않은 경우이다.
+
+- 1차원 합성곱
+
+  만약 **x** = (3,2,1,7,1,2,5,4)이고, **w** = (1/2, 3/4, 1, 1/4)라면,
+
+  ![](https://raw.githubusercontent.com/Jonsuff/MLstudy/master/images/ch15_conv.png)
+
+
 
